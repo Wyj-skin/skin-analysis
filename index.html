@@ -1425,7 +1425,6 @@ function showResult(text){
   document.getElementById('result-body').innerHTML=`<p>${html}</p>`;
   skinAnalysisResult = text;
   showPaySection();
-  window.scrollTo({top:0,behavior:'smooth'});
   showSatModal();
 }
 
@@ -1542,9 +1541,25 @@ const AIRTABLE_TABLE = 'tblLyAej7PYo2zJb7';
 let satRating = 0;
 
 function showSatModal() {
+  // Trigger when user scrolls to 2/3 of the result section
+  let satShown = false;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting && !satShown) {
+        satShown = true;
+        setTimeout(() => {
+          document.getElementById('sat-modal').classList.add('show');
+        }, 800);
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.5 });
+
+  // Observe the pay section (bottom of content)
   setTimeout(() => {
-    document.getElementById('sat-modal').classList.add('show');
-  }, 2000);
+    const target = document.getElementById('pay-section');
+    if(target) observer.observe(target);
+  }, 1000);
 }
 
 function rateStar(n) {
@@ -1573,8 +1588,7 @@ async function submitSatisfaction() {
         records: [{
           fields: {
             'Name': `用户反馈 ${new Date().toLocaleString('zh-CN')}`,
-            'Notes': `满意度评分：${satRating}/5 ★`,
-            'Status': satRating >= 4 ? '满意' : satRating >= 3 ? '一般' : '不满意'
+            'Notes': `满意度：${satRating}/5星 | ${satRating >= 4 ? '满意' : satRating >= 3 ? '一般' : '不满意'}`
           }
         }]
       })
